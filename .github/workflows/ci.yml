@@ -29,7 +29,7 @@ jobs:
                   context: .
                   file: dockerfile
                   push: true
-                  tags: ghcr.io/${{ github.repository_owner }}/blog:latest
+                  tags: ghcr.io/${{ github.repository_owner }}/blog-backend:latest
                   # platforms: linux/arm64
                   cache-from: type=gha
                   cache-to: type=gha,mode=max
