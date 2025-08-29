@@ -13,7 +13,10 @@ func main() {
 	initDB()
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost", "https://blog.makabaka1880.xyz"},
+		AllowOrigins: []string{
+			"https://blog.makabaka1880.xyz",
+			"https://api.blog.makabaka1880.xyz",
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},
