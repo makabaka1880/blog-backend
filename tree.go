@@ -30,7 +30,7 @@ func handleFullUpdate(d *gorm.DB) gin.HandlerFunc {
 		// Look up token in the database
 		var key AuthKey
 		if err := d.
-			Where("key = ?", "auth").
+			Where("key = ?", "full-update").
 			Where("val = ?", token).
 			First(&key).Error; err != nil {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Invalid token"})
