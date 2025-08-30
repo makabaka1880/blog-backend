@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -31,6 +32,12 @@ func main() {
 		c.JSON(200, gin.H{"res": "pong"})
 	})
 
-	configPostsRoute(router)
-	router.Run(":8080")
+	configPostsRoutes(router)
+	configTreesRoutes(router, db)
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: router,
+	}
+	srv.ListenAndServe()
+	defer srv.Close()
 }

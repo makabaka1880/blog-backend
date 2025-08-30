@@ -9,13 +9,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func configPostsRoute(r *gin.Engine) {
-	var posts = r.Group("/posts")
+func configPostsRoutes(r *gin.Engine) {
+	posts := r.Group("/posts")
 	posts.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "Hello, World!"})
 	})
 	posts.GET("/home", func(c *gin.Context) {
-		uri := fmt.Sprintf("%s/%s/refs/heads/main/README.md", os.Getenv("SCM_ORIGIN"), os.Getenv("SCM_REPO"))
+		uri := fmt.Sprintf("%s/%s/refs/heads/main/README.md", os.Getenv("CMS_ORIGIN"), os.Getenv("CMS_REPO"))
 		resp, err := http.Get(uri)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
