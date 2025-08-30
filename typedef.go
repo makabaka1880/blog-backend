@@ -1,6 +1,8 @@
 package main
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type AuthKey struct {
 	ID  uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
@@ -21,4 +23,12 @@ type Content struct {
 	ID      uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	Content string    `gorm:"not null"`
 	NodeID  uuid.UUID `gorm:"type:uuid;not null"`
+	Tree    Tree      `gorm:"foreignKey:NodeID;references:ID"`
+}
+
+type Meta struct {
+	ID     uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
+	NodeID uuid.UUID `gorm:"type:uuid;not null"`
+	TreeID uuid.UUID `gorm:"type:uuid;not null"`
+	meta   JSONB     `gorm:"type:jsonb"`
 }
