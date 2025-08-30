@@ -38,9 +38,13 @@ func main() {
 		Addr:    ":8080",
 		Handler: router,
 	}
-	srv.ListenAndServe()
-	defer func() {
-		println("Server Closing")
-		srv.Close()
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			println("Server failed to start:", err.Error())
+		}
 	}()
+
+	println("Server started on :8080")
+	select {} // Keep main goroutine alive
 }
