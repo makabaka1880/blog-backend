@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -12,29 +13,29 @@ import (
 
 func configTreesRoutes(r *gin.Engine, d *gorm.DB) {
 	trees := r.Group("tree")
-	trees.GET("/full-update", handleFullUpdate(d))
+	trees.POST("/full-update", handleFullUpdate(d))
 }
 
 func handleFullUpdate(d *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// authHeader := c.GetHeader("Authorization")
-		// if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-		// 	c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid Authorization header"})
-		// 	return
-		// }
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing or invalid Authorization header"})
+			return
+		}
 
-		// // Extract token part
-		// token := strings.TrimPrefix(authHeader, "Bearer ")
+		// Extract token part
+		token := strings.TrimPrefix(authHeader, "Bearer ")
 
-		// // Look up token in the database
-		// var key AuthKey
-		// if err := d.
-		// 	Where("key = ?", "auth").
-		// 	Where("val = ?", token).
-		// 	First(&key).Error; err != nil {
-		// 	c.JSON(http.StatusForbidden, gin.H{"error": "Invalid token"})
-		// 	return
-		// }
+		// Look up token in the database
+		var key AuthKey
+		if err := d.
+			Where("key = ?", "auth").
+			Where("val = ?", token).
+			First(&key).Error; err != nil {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Invalid token"})
+			return
+		}
 		commitSHA, err := getLatestCommitSHA()
 		if err != nil {
 			fmt.Printf("%v", err)
