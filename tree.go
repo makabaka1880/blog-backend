@@ -58,7 +58,7 @@ func handleFullUpdate(d *gorm.DB) gin.HandlerFunc {
 }
 
 func getLatestCommitSHA() (string, error) {
-	reqURL := fmt.Sprintf("https://api.github.com/repos/%s/commits/main", os.Getenv("CMS_REPO"))
+	reqURL := fmt.Sprintf("https://api.github.com/repos/%s/commits/%s", os.Getenv("CMS_REPO"), os.Getenv("CMS_BRANCH"))
 	res, err := http.Get(reqURL)
 	if err != nil {
 		return "", fmt.Errorf("failed to fetch commit: %w", err)
