@@ -39,5 +39,8 @@ func main() {
 		Handler: router,
 	}
 	srv.ListenAndServe()
-	defer srv.Close()
+	defer func() {
+		println("Server Closing")
+		srv.Close()
+	}()
 }
