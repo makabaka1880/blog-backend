@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -7,16 +7,19 @@ import (
 	"os"
 	"strings"
 
+	"blog/internal/services"
+	"blog/pkg/models"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-func configTreesRoutes(r *gin.Engine, d *gorm.DB) {
+func ConfigTreesRoutes(r *gin.Engine, d *gorm.DB) {
 	trees := r.Group("tree")
-	trees.POST("/full-update", handleFullUpdate(d))
+	trees.POST("/full-update", HandleFullUpdate(d))
 }
 
-func handleFullUpdate(d *gorm.DB) gin.HandlerFunc {
+func HandleFullUpdate(d *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
@@ -28,7 +31,7 @@ func handleFullUpdate(d *gorm.DB) gin.HandlerFunc {
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 
 		// Look up token in the database
-		var key AuthKey
+		var key models.AuthKey
 		if err := d.
 			Where("key = ?", "full-update").
 			Where("val = ?", token).
@@ -43,12 +46,12 @@ func handleFullUpdate(d *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		tree, err := getTree(commitSHA)
+		tree, err := services.GetTree(commitSHA)
 		if err != nil || tree == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get tree"})
 			return
 		}
-		if err := processTreeAndSaveToDB(d, tree); err != nil {
+		if err := services.ProcessTreeAndSaveToDB(d, tree); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process tree"})
 			return
 		}

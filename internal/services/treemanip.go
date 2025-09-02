@@ -1,4 +1,4 @@
-package main
+package services
 
 import (
 	"encoding/base64"
@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	"blog/pkg/models"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -26,7 +28,7 @@ type TreeResponse struct {
 	} `json:"tree"`
 }
 
-func getTree(tree string) (*TreeResponse, error) {
+func GetTree(tree string) (*TreeResponse, error) {
 	reqURL := fmt.Sprintf("https://api.github.com/repos/%s/git/trees/%s?recursive=1", os.Getenv("CMS_REPO"), tree)
 	res, err := http.Get(reqURL)
 	if err != nil {
@@ -41,9 +43,9 @@ func getTree(tree string) (*TreeResponse, error) {
 	return &parsedTree, nil
 }
 
-func processTreeAndSaveToDB(d *gorm.DB, tree *TreeResponse) error {
+func ProcessTreeAndSaveToDB(d *gorm.DB, tree *TreeResponse) error {
 	// Delete all existing tree nodes first (THIS SHOULD ONLY BE USED IN THE UPDATE ALL ENDPOINT)
-	if err := d.Where("1 = 1").Delete(&Tree{}).Error; err != nil {
+	if err := d.Where("1 = 1").Delete(&models.Tree{}).Error; err != nil {
 		return fmt.Errorf("failed to delete existing tree nodes: %w", err)
 	}
 	parentMap := make(map[string]uuid.UUID)
@@ -68,7 +70,7 @@ func processTreeAndSaveToDB(d *gorm.DB, tree *TreeResponse) error {
 					continue
 				}
 
-				treeNode := Tree{
+				treeNode := models.Tree{
 					Name:     part,
 					ParentID: currentParentID,
 					SHA:      "",
@@ -100,7 +102,7 @@ func processTreeAndSaveToDB(d *gorm.DB, tree *TreeResponse) error {
 				continue
 			}
 
-			treeNode := Tree{
+			treeNode := models.Tree{
 				Name:     finalPart,
 				ParentID: currentParentID,
 				SHA:      item.SHA,
@@ -117,12 +119,12 @@ func processTreeAndSaveToDB(d *gorm.DB, tree *TreeResponse) error {
 
 			// If this is a markdown file, fetch and store its content
 			if strings.HasSuffix(finalPart, ".md") {
-				content, err := fetchContent(item.SHA)
+				content, err := FetchContent(item.SHA)
 				if err != nil {
 					return fmt.Errorf("failed to fetch content for SHA %s: %w", item.SHA, err)
 				}
 
-				contentRecord := Content{
+				contentRecord := models.Content{
 					Content: content,
 					NodeID:  treeNode.ID,
 				}
@@ -148,7 +150,7 @@ func processTreeAndSaveToDB(d *gorm.DB, tree *TreeResponse) error {
 				}
 			}
 
-			treeNode := Tree{
+			treeNode := models.Tree{
 				Name:     parts[len(parts)-1],
 				ParentID: parentID,
 				SHA:      "",
@@ -176,7 +178,7 @@ func processTreeAndSaveToDB(d *gorm.DB, tree *TreeResponse) error {
 	return nil
 }
 
-func fetchContent(sha string) (string, error) {
+func FetchContent(sha string) (string, error) {
 	reqURL := fmt.Sprintf("https://api.github.com/repos/%s/git/blobs/%s", os.Getenv("CMS_REPO"), sha)
 	res, err := http.Get(reqURL)
 	if err != nil {

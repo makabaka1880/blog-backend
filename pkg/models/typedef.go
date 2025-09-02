@@ -1,4 +1,4 @@
-package main
+package models
 
 import (
 	"github.com/google/uuid"
@@ -30,5 +30,6 @@ type Meta struct {
 	ID     uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	NodeID uuid.UUID `gorm:"type:uuid;not null"`
 	TreeID uuid.UUID `gorm:"type:uuid;not null"`
-	meta   JSONB     `gorm:"type:jsonb"`
+	Meta   JSONB     `gorm:"type:jsonb"`
+	Tree   Tree      `gorm:"foreignKey:NodeID;references:ID"` // Correct foreign key definition
 }

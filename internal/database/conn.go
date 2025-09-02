@@ -1,19 +1,21 @@
-package main
+package database
 
 import (
 	"fmt"
 	"log"
 	"os"
 
+	"blog/pkg/models"
+
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-var db *gorm.DB
+var DB *gorm.DB
 var err any
 
-func initDB() {
+func InitDB() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using system env")
 	}
@@ -26,13 +28,13 @@ func initDB() {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s",
 		dbHost, dbUser, dbPassword, dbName, dbPort)
 	fmt.Println(dsn)
-	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		fmt.Println("Failed to connect to database:", err)
 		return
 	}
 
-	err = db.AutoMigrate(&AuthKey{}, &Tree{}, &Content{})
+	err = DB.AutoMigrate(&models.AuthKey{}, &models.Tree{}, &models.Content{}, &models.Meta{})
 	if err != nil {
 		fmt.Println("Error migrating database:", err)
 	}

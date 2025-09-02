@@ -1,8 +1,10 @@
-package main
+package services
 
 import (
 	"fmt"
 	"strings"
+
+	"blog/pkg/models"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -18,7 +20,7 @@ type DefaultTOCGenerator struct{}
 
 // GenerateTOC creates a table of contents for a directory
 func (g *DefaultTOCGenerator) GenerateTOC(db *gorm.DB, nodeID uuid.UUID, path string) (string, error) {
-	var children []Tree
+	var children []models.Tree
 	if err := db.Where("parent_id = ?", nodeID).Find(&children).Error; err != nil {
 		return "", fmt.Errorf("failed to fetch children: %w", err)
 	}
@@ -31,13 +33,13 @@ func (g *DefaultTOCGenerator) GenerateTOC(db *gorm.DB, nodeID uuid.UUID, path st
 	tocBuilder.WriteString("# Table of Contents\n\n")
 
 	// Group by type (file vs directory)
-	var files []Tree
-	var directories []Tree
+	var files []models.Tree
+	var directories []models.Tree
 
 	for _, child := range children {
 		// Check if this child has children (indicating it's a directory)
 		var childCount int64
-		db.Model(&Tree{}).Where("parent_id = ?", child.ID).Count(&childCount)
+		db.Model(&models.Tree{}).Where("parent_id = ?", child.ID).Count(&childCount)
 
 		if childCount > 0 || child.SHA == "" {
 			directories = append(directories, child)
@@ -94,7 +96,7 @@ func (m *TOCManager) GenerateTOCForDirectory(nodeID uuid.UUID, path string) erro
 	}
 
 	// Check if content already exists for this node
-	var existingContent Content
+	var existingContent models.Content
 	if err := m.db.Where("node_id = ?", nodeID).First(&existingContent).Error; err == nil {
 		// Update existing content
 		existingContent.Content = content
@@ -103,7 +105,7 @@ func (m *TOCManager) GenerateTOCForDirectory(nodeID uuid.UUID, path string) erro
 		}
 	} else {
 		// Create new content
-		contentRecord := Content{
+		contentRecord := models.Content{
 			Content: content,
 			NodeID:  nodeID,
 		}
@@ -116,8 +118,8 @@ func (m *TOCManager) GenerateTOCForDirectory(nodeID uuid.UUID, path string) erro
 }
 
 // HasReadmeOrIndex checks if a directory has README.md or index.md files
-func HasReadmeOrIndex(db *gorm.DB, nodeID uuid.UUID) (bool, *Tree, error) {
-	var readmeFiles []Tree
+func HasReadmeOrIndex(db *gorm.DB, nodeID uuid.UUID) (bool, *models.Tree, error) {
+	var readmeFiles []models.Tree
 	if err := db.Where("parent_id = ? AND (name = 'README.md' OR name = 'index.md')", nodeID).Find(&readmeFiles).Error; err != nil {
 		return false, nil, fmt.Errorf("failed to check for README/index files: %w", err)
 	}
@@ -138,20 +140,20 @@ func ProcessDirectoryContent(db *gorm.DB, nodeID uuid.UUID, path string) error {
 
 	if hasReadme && readmeFile != nil {
 		// Directory has README/index file, fetch its content
-		content, err := fetchContent(readmeFile.SHA)
+		content, err := FetchContent(readmeFile.SHA)
 		if err != nil {
 			return fmt.Errorf("failed to fetch README content: %w", err)
 		}
 
 		// Create or update content for the directory
-		var existingContent Content
+		var existingContent models.Content
 		if err := db.Where("node_id = ?", nodeID).First(&existingContent).Error; err == nil {
 			existingContent.Content = content
 			if err := db.Save(&existingContent).Error; err != nil {
 				return fmt.Errorf("failed to update directory content: %w", err)
 			}
 		} else {
-			contentRecord := Content{
+			contentRecord := models.Content{
 				Content: content,
 				NodeID:  nodeID,
 			}

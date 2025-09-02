@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func configPostsRoutes(r *gin.Engine) {
+func ConfigPostsRoutes(r *gin.Engine) {
 	posts := r.Group("/posts")
 	posts.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"message": "Hello, World!"})

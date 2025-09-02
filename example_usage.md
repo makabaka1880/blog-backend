@@ -102,7 +102,7 @@ func (g *AITOCGenerator) GenerateTOC(db *gorm.DB, nodeID uuid.UUID, path string)
 - `SHA` - GitHub blob SHA (for files)
 - `URL` - GitHub API URL
 
-### Content Table  
+### Content Table
 - `ID` - UUID primary key
 - `Content` - Markdown content
 - `NodeID` - Reference to Tree node

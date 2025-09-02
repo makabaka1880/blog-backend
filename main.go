@@ -4,6 +4,9 @@ import (
 	"net/http"
 	"time"
 
+	"blog/internal/database"
+	"blog/internal/handlers"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
@@ -11,7 +14,7 @@ import (
 var router *gin.Engine
 
 func main() {
-	initDB()
+	database.InitDB()
 	router = gin.Default() // fixed
 
 	router.Use(cors.New(cors.Config{
@@ -32,8 +35,8 @@ func main() {
 		c.JSON(200, gin.H{"res": "pong"})
 	})
 
-	configPostsRoutes(router)
-	configTreesRoutes(router, db)
+	handlers.ConfigPostsRoutes(router)
+	handlers.ConfigTreesRoutes(router, database.DB)
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: router,
